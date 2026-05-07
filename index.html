@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>秘偶秘境 Canvas版 v5</title>
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;touch-action:manipulation}
+    body{width:100vw;height:100vh;overflow:hidden;font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#1a1a2e;user-select:none;-webkit-user-select:none}
+    #gameCanvas{position:fixed;z-index:1}
+    .screen{position:fixed;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+    #loginScreen{background:linear-gradient(180deg,#0f0f1a 0%,#1a1a2e 50%,#0f0a1a 100%)}
+    .login-smoke-bg{position:absolute;width:100%;height:100%;overflow:hidden;opacity:0.4;pointer-events:none}
+    .login-smoke{position:absolute;border-radius:50%;animation:smokeFloat 10s ease-in-out infinite}
+    .login-smoke:nth-child(1){width:200px;height:200px;background:radial-gradient(circle,rgba(74,26,107,0.6) 0%,transparent 70%);left:-20%;top:10%}
+    .login-smoke:nth-child(2){width:180px;height:180px;background:radial-gradient(circle,rgba(26,74,107,0.6) 0%,transparent 70%);right:-15%;top:30%;animation-delay:2s}
+    .login-smoke:nth-child(3){width:150px;height:150px;background:radial-gradient(circle,rgba(107,26,74,0.6) 0%,transparent 70%);left:20%;bottom:5%;animation-delay:4s}
+    .login-smoke:nth-child(4){width:120px;height:120px;background:radial-gradient(circle,rgba(58,26,91,0.6) 0%,transparent 70%);right:10%;top:5%;animation-delay:1s}
+    .login-smoke:nth-child(5){width:140px;height:140px;background:radial-gradient(circle,rgba(26,58,107,0.6) 0%,transparent 70%);left:5%;top:50%;animation-delay:3s}
+    @keyframes smokeFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(30px,-40px) scale(1.15)}50%{transform:translate(-20px,30px) scale(0.9)}75%{transform:translate(25px,15px) scale(1.05)}}
+    .login-monster-head{position:relative;margin-bottom:12px;z-index:1}
+    .login-monster-glow{position:absolute;width:100%;height:100%;background:radial-gradient(circle,rgba(139,92,246,0.5) 0%,rgba(139,92,246,0.2) 30%,transparent 60%);animation:glowPulse 3s ease-in-out infinite;pointer-events:none}
+    @keyframes glowPulse{0%,100%{opacity:0.5;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+    .login-monster-head svg{width:90px;height:80px}
+    .login-subtitle{font-size:11px;color:#a78bfa;letter-spacing:3px;margin-bottom:3px;z-index:1}
+    .login-title{font-size:18px;font-weight:900;color:#1a1a1a;background:rgba(255,255,255,0.9);padding:2px 8px;border-radius:3px;text-shadow:0 0 10px rgba(255,255,255,0.5);letter-spacing:4px;margin-bottom:15px;z-index:1}
+    .login-form{width:85%;max-width:260px;z-index:1}
+    .login-input-group{margin-bottom:10px}
+    .login-input-group label{display:block;color:#a78bfa;font-size:11px;margin-bottom:4px;padding-left:5px}
+    .login-input{width:100%;padding:10px 14px;border:2px solid #4c1d95;border-radius:10px;background:rgba(30,20,50,0.9);color:#fff;font-size:13px;outline:none;-webkit-appearance:none}
+    .login-input:focus{border-color:#8b5cf6;box-shadow:0 0 20px rgba(139,92,246,0.4)}
+    .login-error{color:#ef4444;font-size:11px;text-align:center;margin-bottom:6px;display:none}
+    .login-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 25px rgba(139,92,246,0.5);letter-spacing:2px}
+    .login-btn:active{transform:translateY(0);box-shadow:0 3px 15px rgba(139,92,246,0.4)}
+    .login-hint{text-align:center;color:#64748b;font-size:10px;margin-top:10px}
+    #charCreateScreen{background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%)}
+    .char-title{color:#fff;font-size:18px;font-weight:700;margin-bottom:15px;z-index:1}
+    .gender-select{display:flex;gap:20px;margin-bottom:15px;z-index:1}
+    .gender-card{width:90px;height:120px;border:3px solid #374151;border-radius:10px;background:rgba(30,30,50,0.6);cursor:pointer;transition:all 0.3s;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px}
+    .gender-card:hover,.gender-card.selected{border-color:#8b5cf6;background:rgba(139,92,246,0.2);box-shadow:0 0 30px rgba(139,92,246,0.4);transform:translateY(-3px)}
+    .gender-icon{width:55px;height:68px;margin-bottom:6px}
+    .gender-label{color:#fff;font-size:12px;font-weight:600}
+    .char-name-input{margin-bottom:15px;z-index:1;text-align:center}
+    .char-name-input label{display:block;color:#a78bfa;font-size:11px;margin-bottom:4px}
+    .char-name-input input{padding:10px 14px;border:2px solid #4c1d95;border-radius:8px;background:rgba(30,20,50,0.8);color:#fff;font-size:13px;text-align:center;width:180px;outline:none}
+    .char-create-btn{padding:12px 30px;border:none;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 25px rgba(139,92,246,0.5);letter-spacing:2px;z-index:1}
+    #loadingOverlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200}
+    #loadingOverlay.active{display:flex}
+    .loading-text{color:#fff;font-size:14px}
+    #chatInput{position:fixed;z-index:10;background:rgba(30,20,50,0.95);border:2px solid #6d28d9;border-radius:4px;color:#fff;font-size:12px;padding:2px 8px;outline:none;display:none}
+    </style>
+</head>
+<body>
+    <noscript><div style="color:#fff;text-align:center;padding:40px;font-size:18px;">请启用JavaScript后刷新页面</div></noscript>
+    <canvas id="gameCanvas"></canvas>
+    <!-- 登录界面 -->
+    <div id="loginScreen" class="screen">
+        <div class="login-smoke-bg"><div class="login-smoke"></div><div class="login-smoke"></div><div class="login-smoke"></div><div class="login-smoke"></div><div class="login-smoke"></div></div>
+        <div class="login-monster-head">
+            <div class="login-monster-glow"></div>
+            <svg viewBox="0 0 200 180">
+                <ellipse cx="100" cy="90" rx="85" ry="75" fill="#4c1d95"/><ellipse cx="100" cy="90" rx="75" ry="65" fill="#6d28d9"/>
+                <circle cx="70" cy="75" r="25" fill="#1a1a2e"/><circle cx="130" cy="75" r="25" fill="#1a1a2e"/>
+                <circle cx="70" cy="75" r="15" fill="#8b5cf6"><animate attributeName="r" values="15;12;15" dur="4s" repeatCount="indefinite"/></circle>
+                <circle cx="130" cy="75" r="15" fill="#8b5cf6"><animate attributeName="r" values="15;12;15" dur="4s" repeatCount="indefinite"/></circle>
+                <circle cx="70" cy="75" r="5" fill="#fff"/><circle cx="130" cy="75" r="5" fill="#fff"/>
+                <path d="M70 120 Q100 150 130 120" stroke="#a78bfa" stroke-width="4" fill="none"><animate attributeName="d" values="M70 120 Q100 150 130 120;M70 125 Q100 145 130 125;M70 120 Q100 150 130 120" dur="3s" repeatCount="indefinite"/></path>
+                <ellipse cx="50" cy="30" rx="20" ry="35" fill="#6d28d9"/><ellipse cx="150" cy="30" rx="20" ry="35" fill="#6d28d9"/>
+            </svg>
+        </div>
+        <div class="login-subtitle">MIOU MIJING</div>
+        <div class="login-title">秘偶秘境</div>
+        <div class="login-form">
+            <div class="login-input-group"><label>输入任意数字账号</label><input type="text" class="login-input" id="accountInput" placeholder="请输入账号..."></div>
+            <div class="login-error" id="loginError">请输入账号</div>
+            <button class="login-btn" id="loginBtn">进入秘境</button>
+            <div class="login-hint">账号仅用于本地存档识别</div>
+        </div>
+    </div>
+    <!-- 角色创建 -->
+    <div id="charCreateScreen" class="screen">
+        <div class="char-title">创建你的角色</div>
+        <div class="gender-select">
+            <div class="gender-card" data-gender="male" onclick="selectGender(this)">
+                <svg class="gender-icon" viewBox="0 0 90 110"><circle cx="45" cy="25" r="20" fill="#fcd9b6"/><path d="M25 25 Q45 -5 65 25" fill="#78350f"/><rect x="30" y="45" width="30" height="40" rx="5" fill="#3b82f6"/><rect x="22" y="45" width="8" height="25" rx="3" fill="#fcd9b6"/><rect x="60" y="45" width="8" height="25" rx="3" fill="#fcd9b6"/><rect x="32" y="85" width="10" height="20" rx="3" fill="#1e40af"/><rect x="48" y="85" width="10" height="20" rx="3" fill="#1e40af"/></svg>
+                <div class="gender-label">男性</div>
+            </div>
+            <div class="gender-card" data-gender="female" onclick="selectGender(this)">
+                <svg class="gender-icon" viewBox="0 0 90 110"><circle cx="45" cy="25" r="20" fill="#fef3c7"/><path d="M20 30 Q45 0 70 30 Q70 45 45 35 Q20 45 20 30" fill="#92400e"/><ellipse cx="45" cy="55" rx="20" ry="25" fill="#ec4899"/><rect x="25" y="45" width="8" height="20" rx="3" fill="#fef3c7"/><rect x="57" y="45" width="8" height="20" rx="3" fill="#fef3c7"/><rect x="32" y="78" width="10" height="20" rx="3" fill="#db2777"/><rect x="48" y="78" width="10" height="20" rx="3" fill="#db2777"/></svg>
+                <div class="gender-label">女性</div>
+            </div>
+        </div>
+        <div class="char-name-input"><label>角色名称</label><input type="text" id="charNameInput" placeholder="请输入角色名" maxlength="8"></div>
+        <button class="char-create-btn" onclick="createCharacter()">开始冒险</button>
+    </div>
+    <div id="loadingOverlay"><div class="loading-text">正在加载...</div></div>
+    <input type="text" id="chatInput" maxlength="100" autocomplete="off">
+<script>
+// ===== 配置 =====
+const CONFIG={
+    GAME_WIDTH:360,
+    GAME_HEIGHT:640,
+    FRAME_RATE:30,
+    SAVE_KEY:'miouPlayerCanvasV4',
+    MOVE_SPEED:3,
+    FRAME_DURATION:150,
+    PLAYER_FRAME_WIDTH:64,
+    PLAYER_FRAME_HEIGHT:80,
+    PLAYER_HORIZONTAL_SCALE:0.78,
+        PLAYER_DISPLAY_SCALE:0.5,
+    ATLAS_INFO:{
+        walk_down:{start:0,frames:5},walk_left:{start:5,frames:5},walk_right:{start:10,frames:5},walk_up:{start:15,frames:5},
+        idle_down:{start:20,frames:2},idle_left:{start:22,frames:2},idle_right:{start:24,frames:2},idle_up:{start:26,frames:2}
+    }
+};
+
+// ===== 布局定义（按用户精确要求 - 地图垂直居中） =====
+// 地图场景从左侧按钮右边开始，垂直居中
+// Canvas 640px高, 顶栏35px, 聊天区+键盘区约210px, 游戏区385px居中
+const LAYOUT={
+    TOP:{y:0,h:35},
+    MAPTAG:{x:14,y:37,w:22,h:55},       // 地图标签紧贴地图左边缘
+    MAP:{x:38,y:37,w:292,h:390},       // 地图场景(按钮右边开始，垂直居中)
+    LBTN:{x:2,y:125,w:54,h:30,gap:3},  // 左侧按钮
+    RBAR:{x:332,bw:12,y:37,h:390,expH:185,hpY:237}, // 右侧血条(上下排列)
+    CHAT:{
+        y:430,h:38,
+        labels:['全服','世界','区域','队伍'],
+        tagX:2,tagW:42,tagH:16,tagGap:3,
+        inX:2,inY:450,inW:240,inH:16,
+        sendX:246,sendY:450,sendW:42,sendH:16
+    },
+    KP:{
+        y:470,bw:86,bh:52,gap:2,padX:2,
+        rows:[
+            ['1常用','2↑','3辅助','#名称'],
+            ['4←','5周围','6→','0系统'],
+            ['7聊天','8↓','9地图','*频道']
+        ]
+    }
+};
+
+// ===== 精灵图坐标（2524×2398新精灵图） =====
+const SPRITE_COORDS={
+    // ===== 精确坐标（Python PIL像素扫描结果） =====
+    sprites:{
+        rabbit:{x1:1848,y1:1963,x2:2479,y2:2244},   // 631×281
+        ufo:{x1:1890,y1:1698,x2:2307,y2:1821},       // 417×123
+        jetpack:{x1:1890,y1:1376,x2:2321,y2:1665},   // 431×289
+        chest:{x1:1728,y1:1889,x2:1849,y2:2050}      // 121×161
+    },
+    npc:{  // NPC精灵图 (npc_sprites.png, 1077×1077)
+        knight:{x1:81,y1:233,x2:204,y2:430},        // 银甲骑士 124×198
+        pirate:{x1:230,y1:243,x2:347,y2:434},       // 骷髅海盗 118×192
+        darkrobe:{x1:374,y1:252,x2:485,y2:422},     // 黑袍人 112×171
+        mermaid:{x1:515,y1:267,x2:617,y2:422},      // 美人鱼 103×156
+        jetpack_npc:{x1:712,y1:235,x2:802,y2:427},  // 飞行人 91×193
+        ufo_npc:{x1:667,y1:25,x2:906,y2:203},       // 飞行器 240×179
+        chest_npc:{x1:920,y1:369,x2:1004,y2:434},    // 宝箱 85×66
+        red_ghost:{x1:364,y1:477,x2:487,y2:699},     // 红衣鬼 123×222
+        three_head_snake:{x1:843,y1:765,x2:1069,y2:991},  // 三头蛇 226×226
+        red_dino:{x1:370,y1:5,x2:600,y2:230}         // 红恐龙 230×225
+    },
+    icons:{
+        gold:{x1:1728,y1:2050,x2:1793,y2:2149},      // 65×99
+        gem:{x1:1728,y1:2149,x2:1793,y2:2260},       // 65×111
+        chest:{x1:1728,y1:1889,x2:1849,y2:2050}      // 121×161
+    },
+    menuButtons:{
+        character:{x1:28,y1:1366,x2:499,y2:1407},
+        summon:{x1:22,y1:1409,x2:499,y2:1450},
+        equipment:{x1:126,y1:1452,x2:499,y2:1493},
+        skill:{x1:126,y1:1495,x2:499,y2:1536},
+        bag:{x1:126,y1:1538,x2:499,y2:1579},
+        setting:{x1:126,y1:1581,x2:499,y2:1622},
+        system:{x1:126,y1:1624,x2:499,y2:1665}
+    },
+    keyboard:{
+        row0:{y1:1698,y2:1757},
+        row1:{y1:1760,y2:1819},
+        row2:{y1:1822,y2:1879},
+        col0:{x1:470,x2:719},
+        col1:{x1:700,x2:949},
+        col2:{x1:930,x2:1179},
+        col3:{x1:1260,x2:1509}
+    },
+    hpBar:{x1:1848,y1:2050,x2:2025,y2:2365},
+    expBar:{x1:2064,y1:2050,x2:2305,y2:2217},
+    mapTags:{
+        tag0:{x1:126,y1:1889,x2:291,y2:1960},  // w=165,h=71
+        tag1:{x1:291,y1:1889,x2:456,y2:1940},
+        tag2:{x1:456,y1:1889,x2:621,y2:1940},
+        tag3:{x1:621,y1:1889,x2:786,y2:1940},
+        tag4:{x1:786,y1:1889,x2:951,y2:1940},
+        tag5:{x1:951,y1:1889,x2:1116,y2:1940},
+        tag6:{x1:1116,y1:1889,x2:1281,y2:1940}
+    }
+};
+
+const WORLD_MAP = {
+    name: '🌍世界地图',
+    regions: [
+        {
+            id: 'modu',
+            name: '星环历2078魔都',
+            maps: [
+                { id: 'yeshi', name: '魔都夜市', img: 'scene_yeshi.jpg', icon: '🎪', entities: [] },
+                { id: 'xinhua', name: '新华书店', img: 'scene_xinhua.jpg', icon: '📚', entities: [] },
+                { id: 'riverbank', name: '黄埔江边', img: 'scene_riverbank.jpg', icon: '🌊', entities: [
+                    { type: 'knight', x: 84, y: 389, baseY: 389, breathAmp: 2, breathSpeed: 1.8, name: '武器商-唐吉那德' },
+                    { type: 'mermaid', x: 131, y: 334, baseY: 334, breathAmp: 2.5, breathSpeed: 1.5, name: '时尚-艾莎' },
+                    { type: 'pirate', x: 216, y: 327, baseY: 327, breathAmp: 2, breathSpeed: 2.0, name: '道具-克莱斯' },
+                    { type: 'darkrobe', x: 265, y: 347, baseY: 347, breathAmp: 1.5, breathSpeed: 1.6, name: '秘偶装-赫尔奇' },
+                    { type: 'chest_npc', x: 275, y: 405, baseY: 405, breathAmp: 0.5, breathSpeed: 1.2 },
+                    { type: 'jetpack_npc', x: 138, y: 160, baseY: 160, breathAmp: 3, breathSpeed: 2.2 },
+                    { type: 'ufo_npc', x: 278, y: 105, baseY: 105, breathAmp: 4, breathSpeed: 1.0 }
+                ]},
+                { id: 'santi', name: '三里屯小屋', img: 'scene_santi.jpg', icon: '🏠', entities: [
+                    { type: 'rabbit', x: 184, y: 350, baseY: 350, floatAmp: 6, floatSpeed: 1.5 }
+                ]},
+                { id: 'tiankong', name: '天空之城', img: 'scene_tiankong.jpg', icon: '🏰', entities: [] },
+                { id: 'keji', name: '科技馆', img: 'scene_keji.jpg', icon: '🔬', entities: [] },
+                { id: 'cenglin', name: '层林尽染', img: 'scene_cenglin.jpg', icon: '🍂', entities: [] },
+                { id: 'mingyue', name: '明月大湖', img: 'scene_mingyue.jpg', icon: '🌙', entities: [] },
+                { id: 'wuming', name: '无名巷道', img: 'scene_wuming.jpg', icon: '🚪', entities: [] },
+                { id: 'feiqi', name: '废弃工厂', img: 'scene_feiqi.jpg', icon: '🏭', entities: [] },
+                { id: 'hongdeng', name: '红灯街区', img: 'scene_nihon.jpg', icon: '🏮', entities: [] },
+                { id: 'midao', name: '秘偶大道', img: 'scene_midao.jpg', icon: '🎭', entities: [] },
+                { id: 'dongfang', name: '东方明珠', img: 'scene_dongfang.jpg', icon: '🗼', entities: [] },
+                { id: 'jiuceng', name: '九层妖塔', img: 'scene_jiuceng.jpg', icon: '🏯', entities: [] },
+                { id: 'heiyao', name: '黑耀火山', img: 'scene_heiyao.jpg', icon: '🌋', entities: [
+                    { type: 'red_ghost', x: 180, y: 160, baseY: 160, breathAmp: 3, breathSpeed: 2.0, name: '火山神-阿牛' },
+                    { type: 'three_head_snake', x: 130, y: 325, baseY: 325, breathAmp: 0, breathSpeed: 0, scaleAmp: 0.08, scaleSpeed: 1.5, name: '远古蛇王-阿三' },
+                    { type: 'red_dino', x: 260, y: 320, baseY: 320, floatAmp: 5, floatSpeed: 1.8, name: '小火龙-阿宫' }
+                ]},
+                { id: 'hanbing', name: '寒冰峡谷', img: 'scene_hanbing.jpg', icon: '❄️', entities: [] }
+            ]
+        },
+        {
+            id: 'jingdu',
+            name: '京都秘偶学院',
+            maps: []
+        }
+    ]
+};
+
+const DIR={UP:'up',DOWN:'down',LEFT:'left',RIGHT:'right'};
+const CH={GLOBAL:'全服',WORLD:'世界',AREA:'区域',TEAM:'队伍'};
+
+// ===== Canvas尺寸适配 =====
+let gSize={w:360,h:640,l:0,t:0};
+function calcSize(){
+    const sw=window.innerWidth,sh=window.innerHeight,r=9/16;
+    let w,h;
+    if(sw/sh>r){h=sh;w=sh*r}else{w=sw;h=sw/r}
+    gSize={w,h,l:(sw-w)/2,t:(sh-h)/2};
+}
+function applySize(){
+    calcSize();
+    const c=document.getElementById('gameCanvas');
+    if(c){
+        const dpr=window.devicePixelRatio||1;
+        c.width=Math.round(gSize.w*dpr);
+        c.height=Math.round(gSize.h*dpr);
+        c.style.width=gSize.w+'px';
+        c.style.height=gSize.h+'px';
+        c.style.left=gSize.l+'px';
+        c.style.top=gSize.t+'px';
+        // 缩放：让360×640逻辑坐标映射到实际canvas像素
+        const sx=gSize.w/CONFIG.GAME_WIDTH;
+        const sy=gSize.h/CONFIG.GAME_HEIGHT;
+        const ctx=c.getContext('2d');
+        if(ctx){
+            ctx.setTransform(dpr*sx,0,0,dpr*sy,0,0);
+            ctx.imageSmoothingEnabled=true;
+            ctx.imageSmoothingQuality='high';
+        }
+    }
+    ['loginScreen','charCreateScreen'].forEach(id=>{
+        const e=document.getElementById(id);
+        if(e){
+            e.style.width=gSize.w+'px';
+            e.style.height=gSize.h+'px';
+            e.style.left=gSize.l+'px';
+            e.style.top=gSize.t+'px';
+        }
+    });
+}
+window.addEventListener('resize',applySize);
+
+// ===== 资源加载 =====
+class Res{
+    constructor(){
+        this.spritesheet=null;
+        this.atlas=null;
+        this.npcSprites=null;
+        this.scenes={};
+    }
+    async loadAll(){
+        // 遍历 WORLD_MAP 收集所有场景图片
+        const imgMap = {};
+        WORLD_MAP.regions.forEach(region => {
+            region.maps.forEach(map => {
+                if (map.img && !imgMap[map.id]) {
+                    imgMap[map.id] = map.img;
+                }
+            });
+        });
+        
+        const loadTasks = [
+            this.ld('assets/spritesheet.png', 'spritesheet'),
+            this.ld('assets/atlas.png', 'atlas'),
+            this.ld('assets/npc_sprites.png', 'npcSprites')
+        ];
+        
+        // 添加所有场景图片加载任务
+        Object.entries(imgMap).forEach(([id, imgFile]) => {
+            loadTasks.push(this.ld('assets/' + imgFile, id));
+        });
+        
+        await Promise.all(loadTasks);
+        console.log('[资源] sheet='+!!this.spritesheet+' atlas='+!!this.atlas);
+    }
+    ld(s,k){
+        return new Promise(r=>{
+            const i=new Image();
+            i.onload=()=>{
+                if(k==='spritesheet') this.spritesheet=i;
+                else if(k==='atlas') this.atlas=i;
+                else if(k==='npcSprites') this.npcSprites=i;
+                else this.scenes[k]=i;
+                r();
+            };
+            i.onerror=()=>{console.warn('[资源] 失败:'+s);r();};
+            i.src=s;
+        });
+    }
+}
+const res=new Res();
+
+// ===== 黑夜星光背景 =====
+class StarrySky{
+    constructor(){
+        this.stars=[];
+        this.init();
+    }
+    init(){
+        this.stars=[];
+        for(let i=0;i<120;i++){
+            this.stars.push({
+                x:Math.random()*CONFIG.GAME_WIDTH,
+                y:Math.random()*CONFIG.GAME_HEIGHT,
+                size:Math.random()*2+0.5,
+                brightness:Math.random()*0.5+0.5,
+                twinkleSpeed:Math.random()*2+0.5,
+                twinklePhase:Math.random()*Math.PI*2
+            });
+        }
+    }
+    draw(ctx,time){
+        // 夜空渐变
+        const g=ctx.createLinearGradient(0,0,0,CONFIG.GAME_HEIGHT);
+        g.addColorStop(0,'#0a0a1f');
+        g.addColorStop(0.5,'#0f0f2f');
+        g.addColorStop(1,'#1a1a3f');
+        ctx.fillStyle=g;
+        ctx.fillRect(0,0,CONFIG.GAME_WIDTH,CONFIG.GAME_HEIGHT);
+
+        // 绘制星星
+        this.stars.forEach(s=>{
+            const alpha=s.brightness*(0.5+0.5*Math.sin(time*s.twinkleSpeed*0.001+s.twinklePhase));
+            ctx.globalAlpha=alpha;
+            ctx.fillStyle='#ffffff';
+            ctx.beginPath();
+            ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+            ctx.fill();
+        });
+        ctx.globalAlpha=1;
+    }
+}
+const starrySky=new StarrySky();
+
+// ===== 地图描边 =====
+function drawMapBorder(ctx){
+    const M=LAYOUT.MAP;
+    const bw=5;
+    ctx.save();
+    ctx.fillStyle='#e1e1e1';
+    ctx.fillRect(M.x,M.y,M.w,bw);                  // 上
+    ctx.fillRect(M.x,M.y+M.h-bw,M.w,bw);           // 下
+    ctx.fillRect(M.x,M.y+bw,bw,M.h-2*bw);          // 左
+    ctx.fillRect(M.x+M.w-bw,M.y+bw,bw,M.h-2*bw);   // 右
+    ctx.restore();
+}
+
+// ===== 玩家 =====
+class Player{
+    constructor(){
+        const M=LAYOUT.MAP;
+        this.x=M.x+M.w/2;
+        this.y=M.y+M.h*0.6;
+        this.dir=DIR.DOWN;
+        this.lastDir=DIR.DOWN;
+        this.moving=false;
+        this.spd=CONFIG.MOVE_SPEED;
+        this.fi=0;
+        this.ft=0;
+        this.tx=this.x;
+        this.ty=this.y;
+        this.data=null;
+    }
+    setData(d){
+        if(d){
+            this.data=d;
+            if(d.x!=null) this.x=d.x;
+            if(d.y!=null) this.y=d.y;
+            if(d.direction) this.dir=d.direction;
+        }
+    }
+    getData(){
+        return{
+            x:this.x,y:this.y,
+            direction:this.dir,lastDirection:this.lastDir,
+            hp:this.data?.hp||100,maxHp:this.data?.maxHp||100,
+            exp:this.data?.exp||0,maxExp:this.data?.maxExp||100,
+            level:this.data?.level||1,
+            gold:this.data?.gold||0,gem:this.data?.gem||0,
+            name:this.data?.name||'未命名',
+            server:this.data?.server||'七巧板',
+            gender:this.data?.gender||'male'
+        };
+    }
+    moveTo(tx,ty){
+        const dx=tx-this.x,dy=ty-this.y;
+        if(Math.abs(dx)<5&&Math.abs(dy)<5){this.moving=false;return;}
+        if(Math.abs(dx)>Math.abs(dy)){
+            this.tx=tx;
+            this.ty=this.y;
+            this.dir=dx>0?DIR.RIGHT:DIR.LEFT;
+        }else{
+            this.tx=this.x;
+            this.ty=ty;
+            this.dir=dy>0?DIR.DOWN:DIR.UP;
+        }
+        this.moving=true;
+        this.lastDir=this.dir;
+    }
+    setDir(d){this.dir=d;this.lastDir=d;}
+    update(dt){
+        if(this.moving){
+            const dx=this.tx-this.x,dy=this.ty-this.y,d=Math.sqrt(dx*dx+dy*dy);
+            if(d<this.spd){
+                this.x=this.tx;
+                this.y=this.ty;
+                this.moving=false;
+            }else{
+                const r=this.spd/d;
+                this.x+=dx*r;
+                this.y+=dy*r;
+            }
+            this.ft+=dt;
+            if(this.ft>=CONFIG.FRAME_DURATION){
+                this.ft=0;
+                this.fi++;
+            }
+        }else{
+            // idle动画也要推进帧
+            this.ft+=dt;
+            if(this.ft>=CONFIG.FRAME_DURATION*3){  // idle慢一点
+                this.ft=0;
+                this.fi++;
+            }
+        }
+        // 边界限制匹配MAP区域
+        const M=LAYOUT.MAP;
+        this.x=Math.max(M.x+30,Math.min(M.x+M.w-30,this.x));
+        this.y=Math.max(M.y+50,Math.min(M.y+M.h-10,this.y));
+    }
+    draw(ctx){
+        if(!res.atlas){
+            this.drawFB(ctx);
+            return;
+        }
+        try{
+            let at=this.moving?'walk_'+this.dir:'idle_'+this.dir;
+            const a=CONFIG.ATLAS_INFO[at]||CONFIG.ATLAS_INFO.idle_down;
+            const f=this.fi%a.frames;
+            const col=a.start+f;
+            const sx=col*CONFIG.PLAYER_FRAME_WIDTH;
+            const ds=CONFIG.PLAYER_DISPLAY_SCALE;
+            let dw=Math.round(CONFIG.PLAYER_FRAME_WIDTH*ds),dh=Math.round(CONFIG.PLAYER_FRAME_HEIGHT*ds);
+            let dx=this.x-dw/2,dy=this.y-dh;
+            const isH=(this.dir===DIR.LEFT||this.dir===DIR.RIGHT)||(at.startsWith('idle_')&&(this.lastDir===DIR.LEFT||this.lastDir===DIR.RIGHT));
+            if(isH){
+                dw=Math.round(CONFIG.PLAYER_FRAME_WIDTH*CONFIG.PLAYER_HORIZONTAL_SCALE*ds);
+                dx=this.x-dw/2;
+            }
+            ctx.drawImage(res.atlas,sx,0,CONFIG.PLAYER_FRAME_WIDTH,CONFIG.PLAYER_FRAME_HEIGHT,dx,dy,dw,dh);
+        }catch(e){
+            this.drawFB(ctx);
+        }
+    }
+    drawFB(ctx){
+        ctx.fillStyle='#8b5cf6';
+        ctx.beginPath();
+        ctx.arc(this.x,this.y-20,18,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='#fff';
+        ctx.beginPath();
+        ctx.arc(this.x-6,this.y-24,3,0,Math.PI*2);
+        ctx.arc(this.x+6,this.y-24,3,0,Math.PI*2);
+        ctx.fill();
+    }
+}
+const player=new Player();
+
+// ===== 场景 =====
+class Scene{
+    constructor(){
+        this.cur='riverbank';
+        this.curData=null;
+        this.t=0;
+        this.ents=[];
+        this._initCurData();
+    }
+    _initCurData(){
+        for(const region of WORLD_MAP.regions){
+            const map = region.maps.find(m => m.id === this.cur);
+            if(map){
+                this.curData=map;
+                return;
+            }
+        }
+    }
+    findMapById(id){
+        for(const region of WORLD_MAP.regions){
+            const map = region.maps.find(m => m.id === id);
+            if(map) return map;
+        }
+        return null;
+    }
+    // 查找当前地图所在的区域索引
+    findCurrentRegionIndex(){
+        for(let i=0;i<WORLD_MAP.regions.length;i++){
+            const map = WORLD_MAP.regions[i].maps.find(m => m.id === this.cur);
+            if(map) return i;
+        }
+        return 0;
+    }
+    setScene(id){
+        const map = this.findMapById(id);
+        if(map){
+            this.cur=id;
+            this.curData=map;
+            this.initE();
+        }
+    }
+    initE(){
+        this.ents=this.curData?this.curData.entities.map(e=>({...e})):[];
+    }
+    update(dt){
+        this.t+=dt/1000;
+        this.ents.forEach(e=>{
+            // 旧式浮动（rabbit等）
+            if(e.floatAmp){
+                e.y=e.baseY+Math.sin(this.t*e.floatSpeed)*e.floatAmp;
+            }
+            // 新式呼吸（NPC上下微动）
+            if(e.breathAmp){
+                e.y=e.baseY+Math.sin(this.t*e.breathSpeed)*e.breathAmp;
+            }
+        });
+    }
+    drawScene(ctx){
+        const M=LAYOUT.MAP;
+        const img=res.scenes[this.cur];
+        if(img&&img.complete&&img.naturalWidth>0){
+            try{
+                // 填满整个MAP区域（居中裁切）
+                const imgR=img.width/img.height;
+                const mapR=M.w/M.h;
+                let sx=0,sy=0,sw=img.width,sh=img.height;
+                if(imgR>mapR){
+                    sw=img.height*mapR;
+                    sx=(img.width-sw)/2;
+                }else{
+                    sh=img.width/mapR;
+                    sy=(img.height-sh)/2;
+                }
+                ctx.drawImage(img,sx,sy,sw,sh,M.x,M.y,M.w,M.h);
+            }catch(e){
+                ctx.fillStyle='rgba(20,15,40,0.8)';
+                ctx.fillRect(M.x,M.y,M.w,M.h);
+            }
+        }else{
+            // 没有场景图时用渐变背景
+            const g=ctx.createLinearGradient(M.x,M.y,M.x,M.y+M.h);
+            g.addColorStop(0,'#1a1a3f');
+            g.addColorStop(1,'#2d2d5f');
+            ctx.fillStyle=g;
+            ctx.fillRect(M.x,M.y,M.w,M.h);
+        }
+        this.drawEnts(ctx);
+    }
+    drawEnts(ctx){
+        this.ents.forEach(e=>{
+            // 旧式精灵（spritesheet里的rabbit/jetpack/ufo）
+            if(e.type==='jetpack') this.drawSp(ctx,e,'jetpack',e.x-30,e.y-20,60,40);
+            else if(e.type==='ufo') this.drawSp(ctx,e,'ufo',e.x-40,e.y-12,80,24);
+            else if(e.type==='rabbit') this.drawSp(ctx,e,'rabbit',e.x-30,e.y-50,60,70);
+            // NPC精灵（npc_sprites.png）
+            else if(SPRITE_COORDS.npc[e.type]) this.drawNPC(ctx,e);
+        });
+    }
+    drawNPC(ctx,e){
+        const c=SPRITE_COORDS.npc[e.type];
+        if(!c) return;
+        const sw=c.x2-c.x1, sh=c.y2-c.y1;
+        // 宝箱特殊处理：更小
+        if(e.type==='chest_npc'){
+            const dw=16, dh=12;
+            const dx=e.x-dw/2, dy=e.y-dh;
+            if(res.npcSprites){
+                try{ctx.drawImage(res.npcSprites,c.x1,c.y1,sw,sh,dx,dy,dw,dh);return;}catch(ex){}
+            }
+            ctx.fillStyle='#9333ea';ctx.fillRect(dx,dy,dw,dh);
+            return;
+        }
+        // 飞行器和飞行人放大一倍
+        let maxH=45;
+        if(e.type==='ufo_npc') maxH=60;
+        if(e.type==='jetpack_npc') maxH=70;
+        if(e.type==='knight') maxH=90;
+        if(e.type==='mermaid') maxH=54;
+        if(e.type==='pirate') maxH=68;
+        if(e.type==='darkrobe') maxH=56;
+        if(e.type==='red_ghost') maxH=82;
+        if(e.type==='three_head_snake') maxH=140;
+        if(e.type==='red_dino') maxH=60;
+        let animScale=1;
+        if(e.scaleAmp){animScale=1+e.scaleAmp*Math.sin(this.t*(e.scaleSpeed||1));}
+        const scale=maxH/sh*animScale;
+        const dw=Math.round(sw*scale), dh=Math.round(sh*scale);
+        const dx=e.x-dw/2, dy=e.y-dh;
+        if(res.npcSprites){
+            try{
+                ctx.drawImage(res.npcSprites,c.x1,c.y1,sw,sh,dx,dy,dw,dh);
+                // 火焰特效
+                if(e.type==='red_ghost'){
+                    const fx=e.x,fy=dy+dh;
+                    for(let i=0;i<3;i++){
+                        const ox=(Math.random()-0.5)*dw*0.6;
+                        const oh=Math.random()*12+4;
+                        const alpha=0.5+Math.random()*0.5;
+                        ctx.fillStyle='rgba(255,'+Math.floor(100+Math.random()*100)+',0,'+alpha+')';
+                        ctx.beginPath();
+                        ctx.ellipse(fx+ox,fy-oh,4+Math.random()*3,oh*0.5,0,0,Math.PI*2);
+                        ctx.fill();
+                    }
+                }
+                
+                if(e.name){ctx.fillStyle='#fff';ctx.font='bold 8px -apple-system,"Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(e.name,e.x,dy+dh+2);}
+                return;
+            }catch(ex){}
+        }
+        // fallback: 彩色方块
+        ctx.fillStyle='#9333ea';
+        ctx.fillRect(dx,dy,dw,dh);
+        if(e.name){ctx.fillStyle='#fff';ctx.font='bold 8px -apple-system,"Microsoft YaHei",sans-serif';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(e.name,e.x,dy+dh+2);}
+    }
+    drawSp(ctx,e,type,dx,dy,w,h){
+        if(res.spritesheet){
+            try{
+                const c=SPRITE_COORDS.sprites[type];
+                ctx.drawImage(res.spritesheet,c.x1,c.y1,c.x2-c.x1,c.y2-c.y1,dx,dy,w,h);
+                return;
+            }catch(ex){}
+        }
+        this['fb_'+type](ctx,e.x,e.y);
+    }
+    fb_jetpack(ctx,x,y){
+        ctx.fillStyle='#1a1a2e';
+        ctx.fillRect(x-3,y-12,6,8);
+        ctx.fillRect(x-4,y-4,8,10);
+        ctx.fillStyle='#f97316';
+        ctx.fillRect(x-7,y-3,3,8);
+    }
+    fb_ufo(ctx,x,y){
+        ctx.fillStyle='#374151';
+        ctx.beginPath();
+        ctx.ellipse(x,y,15,6,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle='#4b5563';
+        ctx.beginPath();
+        ctx.ellipse(x,y-3,8,6,0,Math.PI,0);
+        ctx.fill();
+    }
+    fb_rabbit(ctx,x,y){
+        ctx.fillStyle='#f5f5f5';
+        ctx.beginPath();
+        ctx.ellipse(x,y,20,30,0,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillRect(x-15,y-50,10,35);
+        ctx.fillRect(x+5,y-50,10,35);
+    }
+    getName(){
+        return this.curData?.name||'未知';
+    }
+}
+const scene=new Scene();
+
+// ===== UI =====
+class UI{
+    constructor(){
+        this.ch=CH.WORLD;
+        this.pk=null;
+        this.pkt=0;
+        this.cb=null;
+        this.areas=[];
+    }
+    setCB(h){this.cb=h;}
+    update(dt){
+        if(this.pkt>0){
+            this.pkt-=dt;
+            if(this.pkt<=0) this.pk=null;
+        }
+    }
+
+    draw(ctx){this.areas=[];}
+
+    // 圆角矩形辅助方法
+    roundRect(ctx,x,y,w,h,r){
+        ctx.beginPath();
+        ctx.moveTo(x+r,y);
+        ctx.lineTo(x+w-r,y);
+        ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+        ctx.lineTo(x+w,y+h-r);
+        ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        ctx.lineTo(x+r,y+h);
+        ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+        ctx.lineTo(x,y+r);
+        ctx.quadraticCurveTo(x,y,x+r,y);
+        ctx.closePath();
+    }
+
+    // 颜色亮度调整
+    ltn(c,f){
+        if(c.startsWith('#')){
+            let r=Math.min(255,Math.round(parseInt(c.slice(1,3),16)*f));
+            let g=Math.min(255,Math.round(parseInt(c.slice(3,5),16)*f));
+            let b=Math.min(255,Math.round(parseInt(c.slice(5,7),16)*f));
+            return'rgb('+r+','+g+','+b+')';
+        }
+        return c;
+    }
+
+    // 顶栏绘制
+    drawTopUI(ctx){
+        const T=LAYOUT.TOP;
+        const d=player.getData();
+        // 半透明深色背景
+        ctx.fillStyle='rgba(10,5,20,0.92)';
+        ctx.fillRect(0,T.y,CONFIG.GAME_WIDTH,T.h);
+
+        // 左侧：服务器-角色名 LV等级（系统字体）
+        ctx.fillStyle='#fff';
+        ctx.font='bold 10px -apple-system,"Microsoft YaHei","PingFang SC","Helvetica Neue",sans-serif';
+        ctx.textAlign='left';
+        ctx.textBaseline='middle';
+        ctx.fillText(d.server+'-'+d.name+' LV'+d.level,4,T.y+T.h/2);
+
+        // 金币图标+金额（使用精灵图）
+        const cx=200;
+        if(res.spritesheet){
+            try{
+                const ic=SPRITE_COORDS.icons.gold;
+                ctx.drawImage(res.spritesheet,ic.x1,ic.y1,ic.x2-ic.x1,ic.y2-ic.y1,cx-8,T.y+2,16,24);
+            }catch(e){
+                // fallback: 画圆
+                ctx.fillStyle='#FFD700';
+                ctx.beginPath();
+                ctx.arc(cx,T.y+T.h/2,7,0,Math.PI*2);
+                ctx.fill();
+            }
+        }else{
+            ctx.fillStyle='#FFD700';
+            ctx.beginPath();
+            ctx.arc(cx,T.y+T.h/2,7,0,Math.PI*2);
+            ctx.fill();
+            ctx.fillRect(cx-1,T.y+T.h/2-10,3,5);
+        }
+        ctx.fillStyle='#FFD700';
+        ctx.font='10px -apple-system,"Microsoft YaHei","PingFang SC","Helvetica Neue",sans-serif';
+        ctx.textAlign='left';
+        ctx.fillText(this.fmt(d.gold),cx+10,T.y+T.h/2);
+
+        // 秘宝图标+金额（使用精灵图）
+        const gx=290;
+        if(res.spritesheet){
+            try{
+                const ic=SPRITE_COORDS.icons.gem;
+                ctx.drawImage(res.spritesheet,ic.x1,ic.y1,ic.x2-ic.x1,ic.y2-ic.y1,gx-8,T.y+2,16,24);
+            }catch(e){
+                // fallback: 画菱形
+                ctx.fillStyle='#a855f7';
+                ctx.beginPath();
+                ctx.moveTo(gx,T.y+T.h/2-8);
+                ctx.lineTo(gx+6,T.y+T.h/2);
+                ctx.lineTo(gx,T.y+T.h/2+8);
+                ctx.lineTo(gx-6,T.y+T.h/2);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }else{
+            ctx.fillStyle='#a855f7';
+            ctx.beginPath();
+            ctx.moveTo(gx,T.y+T.h/2-8);
+            ctx.lineTo(gx+6,T.y+T.h/2);
+            ctx.lineTo(gx,T.y+T.h/2+8);
+            ctx.lineTo(gx-6,T.y+T.h/2);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.font='10px -apple-system,"Microsoft YaHei","PingFang SC","Helvetica Neue",sans-serif';
+        ctx.fillText(this.fmt(d.gem),gx+10,T.y+T.h/2);
+    }
+
+    // 右侧HP/EXP竖条(上下排列)
+    drawRBarUI(ctx){
+        const R=LAYOUT.RBAR;
+        const d=player.getData();
+        const hpR=Math.min(1,d.hp/d.maxHp);
+        const expR=Math.min(1,d.exp/d.maxExp);
+
+        // EXP条背景(上半部分)
+        ctx.fillStyle='rgba(0,0,0,0.6)';
+        ctx.fillRect(R.x,R.y,R.bw,R.expH);
+        // EXP填充(蓝色，从下往上)
+        if(expR>0){
+            const fh=Math.max(1,R.expH*expR);
+            ctx.fillStyle='#4466ff';
+            ctx.fillRect(R.x+1,R.y+R.expH-fh,R.bw-2,fh);
+        }
+        ctx.fillStyle='#aaf';
+        ctx.font='5px sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('EXP',R.x+R.bw/2,R.y+6);
+
+        // HP条背景(下半部分)
+        ctx.fillStyle='rgba(0,0,0,0.6)';
+        ctx.fillRect(R.x,R.hpY,R.bw,R.h-R.hpY+R.y);
+        // HP填充(红色，从下往上)
+        if(hpR>0){
+            const hpH=R.h-R.hpY+R.y;
+            const fh=Math.max(1,hpH*hpR);
+            ctx.fillStyle='#ff4444';
+            ctx.fillRect(R.x+1,R.hpY+hpH-fh,R.bw-2,fh);
+        }
+        ctx.fillStyle='#faa';
+        ctx.font='5px sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('HP',R.x+R.bw/2,R.hpY+6);
+    }
+
+    // 左侧按钮
+    drawLBtnUI(ctx){
+        const B=LAYOUT.LBTN;
+        const MT=LAYOUT.MAPTAG;
+        // 先画地图标签（紧贴地图左侧）
+        ctx.fillStyle='#3b82f6';
+        ctx.fillRect(MT.x,MT.y,MT.w,MT.h);
+        // 向内1px银色描边
+        ctx.strokeStyle='rgba(192,192,192,0.8)';
+        ctx.lineWidth=1;
+        ctx.strokeRect(MT.x+1,MT.y+1,MT.w-2,MT.h-2);
+        ctx.fillStyle='#ffffff';
+        ctx.font='bold 10px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        // 竖排显示地图名
+        const name=scene.getName();
+        for(let i=0;i<name.length;i++){
+            ctx.fillText(name[i],MT.x+MT.w/2,MT.y+12+i*14);
+        }
+        this.areas.push({n:'mapTag',x:MT.x,y:MT.y,w:MT.w,h:MT.h});
+
+        // 左侧功能按钮（在地图场景之上）
+        const btns=[
+            {label:'人物',color:'#FF69B4',textColor:'#fff',name:'character'},
+            {label:'秘偶',color:'#9370DB',textColor:'#fff',name:'summon'},
+            {label:'装备',color:'#4169E1',textColor:'#fff',name:'equipment'},
+            {label:'技能',color:'#00CED1',textColor:'#fff',name:'skill'},
+            {label:'背包',color:'#8B4513',textColor:'#fff',name:'bag'},
+            {label:'符文',color:'#FFD700',textColor:'#000',name:'setting'},
+            {label:'商城',color:'#808080',textColor:'#fff',name:'system'},
+            {label:'确定',color:'#32CD32',textColor:'#fff',name:'confirm'},
+            {label:'取消',color:'#DC143C',textColor:'#fff',name:'cancel'}
+        ];
+        let y=B.y;
+        btns.forEach(b=>{
+            ctx.fillStyle=b.color;
+            ctx.fillRect(B.x,y,B.w,B.h);
+            ctx.strokeStyle='rgba(0,0,0,0.4)';
+            ctx.lineWidth=1;
+            ctx.strokeRect(B.x,y,B.w,B.h);
+            ctx.fillStyle=b.textColor;
+            ctx.font='bold 14px "Microsoft YaHei",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText(b.label,B.x+B.w/2,y+B.h/2);
+            this.areas.push({n:b.name,x:B.x,y,w:B.w,h:B.h});
+            y+=B.h+B.gap;
+        });
+    }
+
+    // 键盘区域
+    drawKPUI(ctx){
+        const K=LAYOUT.KP;
+        const kc={
+            '1':'#DAA520','2':'#DC143C','3':'#FF8C00','#':'#228B22',
+            '4':'#DC143C','5':'#696969','6':'#DC143C',
+            '0':'#F5DEB3','7':'#4169E1','8':'#DC143C','9':'#FF69B4','*':'#C71585'
+        };
+        K.rows.forEach((row,ri)=>{
+            row.forEach((key,ci)=>{
+                const k=key[0],t=key.substring(1);
+                const x=K.padX+ci*(K.bw+K.gap);
+                const y=K.y+ri*(K.bh+K.gap);
+                const bg=kc[k]||'#555';
+
+                // 阴影
+                let so=3;
+                if(this.pk===k) so=1;
+                ctx.fillStyle='rgba(0,0,0,0.5)';
+                ctx.fillRect(x+2,y+so,K.bw,K.bh);
+
+                // 按钮本体
+                ctx.fillStyle=bg;
+                if(this.pk===k) ctx.fillStyle=this.ltn(bg,1.3);
+                ctx.fillRect(x,y,K.bw,K.bh);
+                ctx.strokeStyle='rgba(255,255,255,0.4)';
+                ctx.lineWidth=1;
+                ctx.strokeRect(x,y,K.bw,K.bh);
+
+                // 按键高亮
+                if(this.pk===k){
+                    ctx.shadowColor=bg;
+                    ctx.shadowBlur=8;
+                    ctx.strokeStyle='#fff';
+                    ctx.lineWidth=2;
+                    ctx.strokeRect(x,y,K.bw,K.bh);
+                    ctx.shadowBlur=0;
+                }
+
+                // 大号数字（28px）
+                ctx.fillStyle='#fff';
+                ctx.font='bold 28px Arial,sans-serif';
+                ctx.textAlign='center';
+                ctx.textBaseline='top';
+                ctx.fillText(k,x+K.bw/2,y+4);
+
+                // 小号文字（12px）
+                ctx.fillStyle='rgba(255,255,255,0.9)';
+                ctx.font='12px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+                ctx.fillText(t,x+K.bw/2,y+36);
+
+                this.areas.push({n:'key_'+k,x,y,w:K.bw,h:K.bh,key:k});
+            });
+        });
+    }
+
+    // 聊天区域
+    drawChatUI(ctx){
+        const C=LAYOUT.CHAT;
+        // 半透明背景
+        ctx.fillStyle='rgba(12,8,25,0.88)';
+        ctx.fillRect(0,C.y,CONFIG.GAME_WIDTH,LAYOUT.KP.y-C.y);
+
+        // 上分隔线
+        ctx.strokeStyle='#5a4a8a';
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.moveTo(0,C.y);
+        ctx.lineTo(CONFIG.GAME_WIDTH,C.y);
+        ctx.stroke();
+
+        // 聊天标签
+        const keys=Object.keys(CH);
+        C.labels.forEach((l,i)=>{
+            const sel=CH[keys[i]]===this.ch;
+            const x=C.tagX+i*(C.tagW+C.tagGap);
+            const ty=C.y+4;
+            ctx.fillStyle=sel?'#9370DB':'#3a2a5a';
+            this.roundRect(ctx,x,ty,C.tagW,C.tagH,3);
+            ctx.fill();
+            ctx.fillStyle=sel?'#fff':'#aaa';
+            ctx.font='8px "Microsoft YaHei",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText(l,x+C.tagW/2,ty+C.tagH/2);
+            this.areas.push({n:'chat_'+l,x,y:ty,w:C.tagW,h:C.tagH,isChat:true,ch:keys[i]});
+        });
+
+        // 输入框
+        ctx.fillStyle='rgba(25,15,40,0.95)';
+        this.roundRect(ctx,C.inX,C.inY,C.inW,C.inH,3);
+        ctx.fill();
+        ctx.strokeStyle='#6d28d9';
+        ctx.lineWidth=1;
+        this.roundRect(ctx,C.inX,C.inY,C.inW,C.inH,3);
+        ctx.stroke();
+
+        // 发送按钮
+        ctx.fillStyle='#7c3aed';
+        this.roundRect(ctx,C.sendX,C.sendY,C.sendW,C.sendH,3);
+        ctx.fill();
+        ctx.fillStyle='#fff';
+        ctx.font='8px "Microsoft YaHei",sans-serif';
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText('发送',C.sendX+C.sendW/2,C.sendY+C.sendH/2);
+        this.areas.push({n:'send',x:C.sendX,y:C.sendY,w:C.sendW,h:C.sendH});
+
+        // 键盘区分隔线
+        ctx.strokeStyle='#5a4a8a';
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.moveTo(0,LAYOUT.KP.y);
+        ctx.lineTo(CONFIG.GAME_WIDTH,LAYOUT.KP.y);
+        ctx.stroke();
+    }
+
+    handleClick(x,y){
+        for(const a of this.areas){
+            if(x>=a.x&&x<=a.x+a.w&&y>=a.y&&y<=a.y+a.h){
+                if(a.isChat){
+                    this.ch=CH[a.ch];
+                    return{act:'ch_ch'};
+                }
+                if(a.n==='send'){
+                    return{act:'send'};
+                }
+                if(a.n.startsWith('key_')){
+                    this.pk=a.key;
+                    this.pkt=150;
+                    return{act:'key',key:a.key};
+                }
+                if(this.cb){
+                    return this.cb(a.n);
+                }
+                return{act:'btn',name:a.n};
+            }
+        }
+        return null;
+    }
+
+    fmt(n){
+        if(n>=1e12)return(n/1e12).toFixed(1)+'T';
+        if(n>=1e9)return(n/1e9).toFixed(1)+'B';
+        if(n>=1e6)return(n/1e6).toFixed(1)+'M';
+        if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+        return n.toString();
+    }
+}
+const ui=new UI();
+
+// ===== 输入处理 =====
+class IH{
+    constructor(cv){
+        this.cv=cv;
+        this.ci=null;
+        this.touchStartY=0;
+        this.touchStartX=0;
+        cv.addEventListener('click',e=>this.clk(e));
+        cv.addEventListener('touchstart',e=>this.tchStart(e),{passive:false});
+        cv.addEventListener('touchend',e=>{e.preventDefault();this.tchEnd(e)},{passive:false});
+        document.addEventListener('keydown',e=>this.key(e));
+    }
+    setCI(el){this.ci=el;}
+    gc(e){
+        const r=this.cv.getBoundingClientRect();
+        let cx,cy;
+        if(e.touches&&e.touches.length>0){
+            cx=e.touches[0].clientX;cy=e.touches[0].clientY;
+        }else if(e.changedTouches&&e.changedTouches.length>0){
+            cx=e.changedTouches[0].clientX;cy=e.changedTouches[0].clientY;
+        }else{
+            cx=e.clientX;cy=e.clientY;
+        }
+        return{x:(cx-r.left)/r.width*CONFIG.GAME_WIDTH,y:(cy-r.top)/r.height*CONFIG.GAME_HEIGHT};
+    }
+    tchStart(e){
+        if(e.touches&&e.touches.length>0){
+            const p=this.gc({touches:e.touches});
+            this.touchStartY=p.y;
+            this.touchStartX=p.x;
+        }
+    }
+    clk(e){const p=this.gc(e);this.proc(p.x,p.y,0,0);}
+    tchEnd(e){
+        if(e.changedTouches&&e.changedTouches.length>0){
+            const p=this.gc({changedTouches:e.changedTouches});
+            const dy=p.y-this.touchStartY;
+            const dx=p.x-this.touchStartX;
+            this.proc(p.x,p.y,dx,dy);
+        }
+    }
+    proc(x,y,dx,dy){
+        // 如果地图面板打开，先处理面板点击/滑动
+        if(game.handleMapPanelClick(x,y,dx,dy)){
+            return;
+        }
+        
+        const r=ui.handleClick(x,y);
+        if(r){
+            if(r.act==='send'){
+                if(this.ci&&this.ci.value.trim()){
+                    this.ci.value='';
+                }
+                return;
+            }
+            if(r.act==='ch_ch'){
+                return;
+            }
+            if(r.act==='key'){
+                this.gk(r.key);
+                return;
+            }
+        }
+        // 点击地图区域移动（地图面板关闭时才触发）
+        const M=LAYOUT.MAP;
+        if(x>=M.x&&x<=M.x+M.w&&y>=M.y&&y<=M.y+M.h){
+            player.moveTo(x,y);
+        }
+    }
+    gk(k){
+        // 地图面板打开时，处理面板导航
+        if(game.mapPanel!==null){
+            // 5键确认选择
+            if(k==='5'){
+                game.confirmMapSelection();
+            }
+            // 9键返回（区域地图时关闭，世界地图时关闭）
+            if(k==='9'){
+                game.closeMapPanel();
+            }
+            // 2/4/6/8方向键导航
+            if(k==='2'){
+                game.moveMapCursor(-2);
+            }
+            if(k==='8'){
+                game.moveMapCursor(2);
+            }
+            if(k==='4'){
+                game.moveMapCursor(-1);
+            }
+            if(k==='6'){
+                game.moveMapCursor(1);
+            }
+            return;
+        }
+        switch(k){
+            case'2':player.setDir(DIR.UP);player.moving=true;player.tx=player.x;player.ty=player.y-50;break;
+            case'4':player.setDir(DIR.LEFT);player.moving=true;player.tx=player.x-50;player.ty=player.y;break;
+            case'6':player.setDir(DIR.RIGHT);player.moving=true;player.tx=player.x+50;player.ty=player.y;break;
+            case'8':player.setDir(DIR.DOWN);player.moving=true;player.tx=player.x;player.ty=player.y+50;break;
+            case'7':if(this.ci){this.ci.style.display='block';this.ci.focus();}break;
+            case'9':game.toggleMapPanel();break;
+        }
+    }
+    key(e){
+        // 地图面板打开时，处理面板导航
+        if(game.mapPanel!==null){
+            if(e.key==='9'||e.key==='Num9'){
+                game.closeMapPanel();
+                e.preventDefault();
+                return;
+            }
+            if(e.key==='Enter'||e.key==='5'||e.key==='Num5'){
+                game.confirmMapSelection();
+                e.preventDefault();
+                return;
+            }
+            // 方向键移动选中项
+            if(e.key==='ArrowUp'||e.key==='w'){
+                game.moveMapCursor(-2);
+                e.preventDefault();
+                return;
+            }
+            if(e.key==='ArrowDown'||e.key==='s'){
+                game.moveMapCursor(2);
+                e.preventDefault();
+                return;
+            }
+            if(e.key==='ArrowLeft'||e.key==='a'){
+                game.moveMapCursor(-1);
+                e.preventDefault();
+                return;
+            }
+            if(e.key==='ArrowRight'||e.key==='d'){
+                game.moveMapCursor(1);
+                e.preventDefault();
+                return;
+            }
+            return;
+        }
+        switch(e.key){
+            case'ArrowUp':case'w':player.setDir(DIR.UP);player.moving=true;player.tx=player.x;player.ty=player.y-50;e.preventDefault();break;
+            case'ArrowDown':case's':player.setDir(DIR.DOWN);player.moving=true;player.tx=player.x;player.ty=player.y+50;e.preventDefault();break;
+            case'ArrowLeft':case'a':player.setDir(DIR.LEFT);player.moving=true;player.tx=player.x-50;player.ty=player.y;e.preventDefault();break;
+            case'ArrowRight':case'd':player.setDir(DIR.RIGHT);player.moving=true;player.tx=player.x+50;player.ty=player.y;e.preventDefault();break;
+        }
+    }
+}
+
+// ===== Game =====
+class Game{
+    constructor(){
+        this.cv=null;
+        this.cx=null;
+        this.run=false;
+        this.lt=0;
+        this.dt=0;
+        this.fi=1000/CONFIG.FRAME_RATE;
+        this.st='loading';
+        this.mapPanel=null;  // null / 'world' / 'region'
+        this.mapPanelRegionIndex=0;
+        this.mapPanelBtns=[];
+        this.mapPanelScroll=0;  // 滚动偏移量（像素）
+        this.mapPanelCursor=0;  // 当前选中项索引
+        this.mapPanelCols=2;     // 每行列数
+        this.mapCardW=110;       // 卡片宽度
+        this.mapCardH=68;       // 卡片高度
+        this.mapImgW=60;        // 图片区域宽度
+        this.mapImgH=40;        // 图片区域高度
+        this.mapCardGap=6;      // 卡片间距
+        this.mapRowH=83;        // 每行高度（卡片高度+间距）
+    }
+    init(cv){
+        this.cv=cv;
+        this.cx=cv.getContext('2d');
+        // 注意：不在这里重置imageSmoothing，由applySize统一管理
+        scene.initE();
+    }
+    start(){
+        if(this.run)return;
+        this.run=true;
+        this.lt=performance.now();
+        console.log('[游戏] 启动');
+        this.loop();
+    }
+    loop(){
+        if(!this.run)return;
+        const now=performance.now();
+        this.dt=now-this.lt;
+        if(this.dt>=this.fi){
+            try{this.update(this.dt);this.render();}catch(e){console.error('[游戏] 错误:',e);}
+            this.lt=now-(this.dt%this.fi);
+        }
+        requestAnimationFrame(()=>this.loop());
+    }
+    update(dt){
+        if(this.st!=='playing')return;
+        player.update(dt);
+        scene.update(dt);
+        ui.update(dt);
+    }
+    
+    // 圆角矩形辅助方法（与UI保持一致）
+    roundRect(ctx,x,y,w,h,r){
+        ctx.beginPath();
+        ctx.moveTo(x+r,y);
+        ctx.lineTo(x+w-r,y);
+        ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+        ctx.lineTo(x+w,y+h-r);
+        ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+        ctx.lineTo(x+r,y+h);
+        ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+        ctx.lineTo(x,y+r);
+        ctx.quadraticCurveTo(x,y,x+r,y);
+        ctx.closePath();
+    }
+    
+    // 移动地图面板中的光标
+    moveMapCursor(delta){
+        if(!this.mapPanel) return;
+        
+        if(this.mapPanel==='region'){
+            const region=WORLD_MAP.regions[this.mapPanelRegionIndex];
+            if(!region) return;
+            const total=region.maps.length;
+            if(total===0) return;
+            
+            let newCursor=this.mapPanelCursor+delta;
+            
+            // 处理左右移动时的越界换行
+            if(delta===1){  // 右移
+                const currentRow=Math.floor(this.mapPanelCursor/this.mapPanelCols);
+                const currentCol=this.mapPanelCursor%this.mapPanelCols;
+                if(currentCol===1||newCursor>=total){  // 在右列或越界
+                    if(newCursor>=total&&currentCol===0){
+                        newCursor=this.mapPanelCursor;  // 不移动
+                    }
+                }
+            } else if(delta===-1){  // 左移
+                const currentCol=this.mapPanelCursor%this.mapPanelCols;
+                if(currentCol===0){  // 在左列
+                    if(this.mapPanelCursor===0){
+                        newCursor=this.mapPanelCursor;  // 不移动
+                    } else {
+                        newCursor=this.mapPanelCursor-1;
+                    }
+                }
+            }
+            
+            // 限制范围
+            newCursor=Math.max(0,Math.min(total-1,newCursor));
+            this.mapPanelCursor=newCursor;
+            
+            // 自动滚动：使当前cursor对应的卡片可见
+            const cols=this.mapPanelCols;
+            const cardH=this.mapCardH;
+            const gap=this.mapCardGap;
+            const panelW=248;
+            const panelH=LAYOUT.MAP.h;
+            const panelX=LAYOUT.MAP.x+(LAYOUT.MAP.w-panelW)/2;
+            const panelY=LAYOUT.MAP.y;
+            const contentY=panelY+36;
+            const contentH=panelH-55;
+            const cardStartY=contentY+8;
+            const cardW=this.mapCardW;
+            
+            const row=Math.floor(this.mapPanelCursor/cols);
+            const cardTopY=cardStartY+row*(cardH+gap)-this.mapPanelScroll;
+            const cardBottomY=cardTopY+cardH;
+            
+            // 如果卡片在可视区上方，需要向下滚动
+            if(cardTopY<contentY){
+                this.mapPanelScroll=cardStartY+row*(cardH+gap)-contentY;
+                this.mapPanelScroll=Math.max(0,this.mapPanelScroll);
+            }
+            // 如果卡片在可视区下方，需要向上滚动
+            else if(cardBottomY>contentY+contentH){
+                this.mapPanelScroll=cardStartY+row*(cardH+gap)+cardH-(contentY+contentH);
+                this.mapPanelScroll=Math.max(0,this.mapPanelScroll);
+            }
+            
+        } else if(this.mapPanel==='world'){
+            const total=WORLD_MAP.regions.length;
+            if(total===0) return;
+            let newCursor=this.mapPanelCursor+delta;
+            newCursor=Math.max(0,Math.min(total-1,newCursor));
+            this.mapPanelCursor=newCursor;
+        }
+    }
+    
+    // 确认地图选择
+    confirmMapSelection(){
+        if(!this.mapPanel) return;
+        
+        if(this.mapPanel==='region'){
+            const region=WORLD_MAP.regions[this.mapPanelRegionIndex];
+            if(!region||this.mapPanelCursor>=region.maps.length) return;
+            const map=region.maps[this.mapPanelCursor];
+            if(map){
+                scene.setScene(map.id);
+                this.mapPanel=null;
+                this.mapPanelCursor=0;
+                this.mapPanelScroll=0;
+            }
+        } else if(this.mapPanel==='world'){
+            if(this.mapPanelCursor>=WORLD_MAP.regions.length) return;
+            this.mapPanelRegionIndex=this.mapPanelCursor;
+            this.mapPanel='region';
+            // 初始化该区域的cursor为当前地图位置
+            const region=WORLD_MAP.regions[this.mapPanelRegionIndex];
+            if(region){
+                const idx=region.maps.findIndex(m=>m.id===scene.cur);
+                this.mapPanelCursor=idx>=0?idx:0;
+            }
+            this.mapPanelScroll=0;
+        }
+    }
+    
+    // 关闭地图面板
+    closeMapPanel(){
+        this.mapPanel=null;
+        this.mapPanelCursor=0;
+        this.mapPanelScroll=0;
+    }
+    
+    // 绘制地图选择面板
+    drawMapPanel(ctx){
+        if(!this.mapPanel) return;
+        
+        this.mapPanelBtns=[];
+        
+        // 全屏半透明黑色背景 - 30%透明度
+        ctx.fillStyle='rgba(5,3,15,0.6)';
+        const M=LAYOUT.MAP;
+        ctx.fillRect(M.x,M.y,M.w,M.h);
+        
+        const panelW=248;
+        const panelH=LAYOUT.MAP.h;
+        const panelX=LAYOUT.MAP.x+(LAYOUT.MAP.w-panelW)/2;
+        const panelY=LAYOUT.MAP.y;
+        const contentY=panelY+36;
+        const contentH=panelH-55;   // 内容区高度
+        
+        // 面板背景 - 30%透明度
+        ctx.fillStyle='rgba(20,15,40,0.75)';
+        this.roundRect(ctx,panelX,panelY,panelW,panelH,12);
+        ctx.fill();
+        ctx.strokeStyle='rgba(139,92,246,0.9)';
+        ctx.lineWidth=2;
+        this.roundRect(ctx,panelX,panelY,panelW,panelH,12);
+        ctx.stroke();
+        
+        if(this.mapPanel==='world'){
+            // 世界地图标题
+            ctx.fillStyle='#a78bfa';
+            ctx.font='bold 14px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText(WORLD_MAP.name,panelX+panelW/2,panelY+20);
+            
+            // 计算区域卡片布局
+            const cols=2;
+            const cardW=124;
+            const cardH=60;
+            const cardGap=8;
+            const cardStartX=panelX+12;
+            const cardStartY=contentY+10;
+            
+            // 裁切内容区域
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(panelX+4,contentY,panelW-8,contentH);
+            ctx.clip();
+            
+            WORLD_MAP.regions.forEach((region,idx)=>{
+                const col=idx%cols;
+                const row=Math.floor(idx/cols);
+                const cardX=cardStartX+col*(cardW+cardGap);
+                const cardY=cardStartY+row*(cardH+cardGap)-this.mapPanelScroll;
+                
+                // 检查是否在可视范围内
+                if(cardY+cardH<contentY||cardY>contentY+contentH) return;
+                
+                const isSelected=(idx===this.mapPanelCursor);
+                const btnW=cardW;
+                const btnH=cardH;
+                
+                // 按钮背景 - 30%透明度
+                ctx.fillStyle=isSelected?'rgba(109,40,217,0.85)':'rgba(49,46,129,0.6)';
+                this.roundRect(ctx,cardX,cardY,btnW,btnH,8);
+                ctx.fill();
+                
+                // 选中边框（白色）
+                if(isSelected){
+                    ctx.strokeStyle='rgba(255,255,255,0.9)';
+                    ctx.lineWidth=2;
+                    this.roundRect(ctx,cardX,cardY,btnW,btnH,8);
+                    ctx.stroke();
+                } else {
+                    ctx.strokeStyle='rgba(139,92,246,0.8)';
+                    ctx.lineWidth=1;
+                    this.roundRect(ctx,cardX,cardY,btnW,btnH,8);
+                    ctx.stroke();
+                }
+                
+                // 区域名称（两行显示）- 文字放大一倍
+                ctx.fillStyle='#fff';
+                ctx.font='bold 13px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+                ctx.textAlign='center';
+                ctx.textBaseline='middle';
+                const mapCount=region.maps.length;
+                ctx.fillText(region.name,cardX+btnW/2,cardY+btnH/2-6);
+                
+                // 地图数量 - 文字放大一倍
+                ctx.fillStyle='rgba(255,255,255,0.9)';
+                ctx.font='10px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+                ctx.fillText(mapCount+'张地图',cardX+btnW/2,cardY+btnH/2+8);
+                
+                this.mapPanelBtns.push({x:cardX,y:cardY,w:btnW,h:btnH,action:'region',regionIndex:idx});
+            });
+            
+            ctx.restore();
+            
+            // 关闭提示 - 文字放大一倍
+            ctx.fillStyle='rgba(255,255,255,0.85)';
+            ctx.font='11px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText('9关闭|方向键选择|5确认',CONFIG.GAME_WIDTH/2,panelY+panelH-15);
+            
+        } else if(this.mapPanel==='region'){
+            const region=WORLD_MAP.regions[this.mapPanelRegionIndex];
+            if(!region) return;
+            
+            // 🌍世界按钮 - 在左边
+            const worldBtnW=72;
+            const worldBtnH=22;
+            const worldBtnX=panelX+8;
+            const worldBtnY=panelY+8;
+            
+            ctx.fillStyle='rgba(76,29,149,0.7)';
+            this.roundRect(ctx,worldBtnX,worldBtnY,worldBtnW,worldBtnH,4);
+            ctx.fill();
+            ctx.fillStyle='#fff';
+            ctx.font='14px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText('🌍世界',worldBtnX+worldBtnW/2,worldBtnY+worldBtnH/2);
+            
+            this.mapPanelBtns.push({x:worldBtnX,y:worldBtnY,w:worldBtnW,h:worldBtnH,action:'goToWorld'});
+            
+            // ←返回按钮 - 在右边
+            const backBtnW=60;
+            const backBtnH=22;
+            const backBtnX=panelX+panelW-backBtnW-8;
+            const backBtnY=panelY+8;
+            
+            ctx.fillStyle='rgba(55,65,81,0.7)';
+            this.roundRect(ctx,backBtnX,backBtnY,backBtnW,backBtnH,4);
+            ctx.fill();
+            ctx.fillStyle='#fff';
+            ctx.font='14px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText('←返回',backBtnX+backBtnW/2,backBtnY+backBtnH/2);
+            
+            this.mapPanelBtns.push({x:backBtnX,y:backBtnY,w:backBtnW,h:backBtnH,action:'backToWorld'});
+            
+            // 区域标题 - 居中，不压按钮
+            ctx.fillStyle='#a78bfa';
+            ctx.font='bold 16px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText(region.name,panelX+panelW/2,panelY+19);
+            
+            // 地图网格布局
+            const cardW=this.mapCardW;
+            const cardH=this.mapCardH;
+            const gap=this.mapCardGap;
+            const cols=this.mapPanelCols;
+            const cardStartX=panelX+12;
+            const cardStartY=contentY+8;
+            const totalMaps=region.maps.length;
+            const totalRows=Math.ceil(totalMaps/cols);
+            const totalContentH=totalRows*(cardH+gap);
+            
+            // 裁切内容区域
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(panelX+4,contentY,panelW-8,contentH);
+            ctx.clip();
+            
+            region.maps.forEach((map,idx)=>{
+                const col=idx%cols;
+                const row=Math.floor(idx/cols);
+                const cardX=cardStartX+col*(cardW+gap);
+                const cardY=cardStartY+row*(cardH+gap)-this.mapPanelScroll;
+                
+                // 检查是否在可视范围内
+                if(cardY+cardH<contentY||cardY>contentY+contentH) return;
+                
+                const isCurrent=(map.id===scene.cur);
+                const isSelected=(idx===this.mapPanelCursor);
+                const btnW=cardW;
+                const btnH=cardH;
+                const nameY=cardY+cardH-12;
+                
+                // 按钮背景 - 30%透明度
+                ctx.fillStyle='rgba(30,27,75,0.7)';
+                this.roundRect(ctx,cardX,cardY,btnW,btnH,6);
+                ctx.fill();
+                
+                // 当前地图紫色边框
+                if(isCurrent){
+                    ctx.strokeStyle='rgba(167,139,250,0.8)';
+                    ctx.lineWidth=2;
+                    this.roundRect(ctx,cardX,cardY,btnW,btnH,6);
+                    ctx.stroke();
+                }
+                
+                // 选中边框（白色）
+                if(isSelected){
+                    ctx.strokeStyle='rgba(255,255,255,0.9)';
+                    ctx.lineWidth=2;
+                    this.roundRect(ctx,cardX,cardY,btnW,btnH,6);
+                    ctx.stroke();
+                }
+                
+                // 绘制emoji图标 - 不画背景，透明
+                const emoji=map.icon||'📍';
+                ctx.font='28px Arial,sans-serif';
+                ctx.textAlign='center';
+                ctx.textBaseline='middle';
+                ctx.fillText(emoji,cardX+cardW/2,cardY+24);
+                
+                // 地图名称 - 在图标下方
+                ctx.fillStyle=isCurrent?'#a78bfa':'#fff';
+                ctx.font='12px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+                ctx.textAlign='center';
+                ctx.textBaseline='middle';
+                let displayName=map.name;
+                if(map.name.length>4){
+                    displayName=map.name.substring(0,4)+'…';
+                }
+                ctx.fillText(displayName+(isCurrent?' ★':''),cardX+btnW/2,cardY+cardH-12);
+                
+                this.mapPanelBtns.push({x:cardX,y:cardY,w:btnW,h:btnH,action:'map',mapId:map.id,idx:idx});
+            });
+            
+            ctx.restore();
+            
+            // 关闭提示 - 文字放大一倍
+            ctx.fillStyle='rgba(255,255,255,0.85)';
+            ctx.font='11px -apple-system,"Microsoft YaHei","PingFang SC",sans-serif';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText('9关闭|方向键选择|5确认',CONFIG.GAME_WIDTH/2,panelY+panelH-15);
+        }
+    }
+    
+    // 处理地图面板点击
+    handleMapPanelClick(x,y,dx,dy){
+        if(!this.mapPanel) return false;
+        
+        // 处理触摸滑动滚动
+        if(Math.abs(dy)>10||Math.abs(dx)>10){
+            // 滑动距离超过10px，视为滚动
+            const region=WORLD_MAP.regions[this.mapPanelRegionIndex];
+            let totalH;
+            if(this.mapPanel==='region'&&region){
+                const totalRows=Math.ceil(region.maps.length/this.mapPanelCols);
+                totalH=totalRows*this.mapRowH;
+            } else {
+                const totalRows=Math.ceil(WORLD_MAP.regions.length/2);
+                totalH=totalRows*68;
+            }
+            const contentH=420;
+            const maxScroll=Math.max(0,totalH-contentH);
+            
+            this.mapPanelScroll=Math.max(0,Math.min(maxScroll,this.mapPanelScroll-dy));
+            
+            // 如果有滑动，不处理点击
+            return true;
+        }
+        
+        // 检查是否点击在面板区域外（关闭面板）
+        const panelW=248;
+        const panelH=LAYOUT.MAP.h;
+        const panelX=LAYOUT.MAP.x+(LAYOUT.MAP.w-panelW)/2;
+        const panelY=LAYOUT.MAP.y;
+        
+        if(x<panelX||x>panelX+panelW||y<panelY||y>panelY+panelH){
+            this.mapPanel=null;
+            this.mapPanelCursor=0;
+            this.mapPanelScroll=0;
+            return true;
+        }
+        
+        // 检查按钮点击
+        for(const btn of this.mapPanelBtns){
+            if(x>=btn.x&&x<=btn.x+btn.w&&y>=btn.y&&y<=btn.y+btn.h){
+                if(btn.action==='region'){
+                    this.mapPanel='region';
+                    this.mapPanelRegionIndex=btn.regionIndex;
+                    // 初始化该区域的cursor
+                    const region=WORLD_MAP.regions[this.mapPanelRegionIndex];
+                    if(region){
+                        const idx=region.maps.findIndex(m=>m.id===scene.cur);
+                        this.mapPanelCursor=idx>=0?idx:0;
+                    }
+                    this.mapPanelScroll=0;
+                } else if(btn.action==='backToWorld'){
+                    this.mapPanel='world';
+                    const idx=scene.findCurrentRegionIndex();
+                    this.mapPanelCursor=idx;
+                    this.mapPanelScroll=0;
+                } else if(btn.action==='goToWorld'){
+                    this.mapPanel='world';
+                    this.mapPanelCursor=0;
+                    this.mapPanelScroll=0;
+                } else if(btn.action==='map'){
+                    scene.setScene(btn.mapId);
+                    this.mapPanel=null;
+                    this.mapPanelCursor=0;
+                    this.mapPanelScroll=0;
+                }
+                return true;
+            }
+        }
+        return true;
+    }
+    
+    // 切换地图面板
+    toggleMapPanel(){
+        if(this.mapPanel===null){
+            // 打开区域地图（找到当前scene.cur所在的region）
+            const regionIdx=scene.findCurrentRegionIndex();
+            this.mapPanelRegionIndex=regionIdx;
+            this.mapPanel='region';
+            // 初始化cursor为当前地图位置
+            const region=WORLD_MAP.regions[regionIdx];
+            if(region){
+                const idx=region.maps.findIndex(m=>m.id===scene.cur);
+                this.mapPanelCursor=idx>=0?idx:0;
+            }
+            this.mapPanelScroll=0;
+        } else {
+            // 关闭面板
+            this.mapPanel=null;
+            this.mapPanelCursor=0;
+            this.mapPanelScroll=0;
+        }
+    }
+    
+    render(){
+        if(this.st!=='playing')return;
+        const ctx=this.cx;
+        const time=performance.now();
+
+        // 1. 黑夜星光背景（全屏）
+        starrySky.draw(ctx,time);
+
+        // 2. 聊天区背景（半透明，星光可透）
+        ui.drawChatUI(ctx);
+
+        // 3. 场景图片（整个游戏区，在聊天区之上！）
+        scene.drawScene(ctx);
+
+        // 4. 玩家角色
+        try{player.draw(ctx);}catch(e){}
+
+        // 5. 地图流光描边（在场景和玩家之上）
+        drawMapBorder(ctx);
+
+        // 6. UI元素
+        ui.drawTopUI(ctx);
+        ui.drawLBtnUI(ctx);
+        ui.drawRBarUI(ctx);
+        ui.drawKPUI(ctx);
+        
+        // 7. 地图选择面板（最上层）
+        this.drawMapPanel(ctx);
+    }
+    setState(s){this.st=s;if(s==='playing')this.start();}
+    save(){
+        try{
+            localStorage.setItem(CONFIG.SAVE_KEY,JSON.stringify({player:player.getData(),scene:scene.cur,ts:Date.now()}));
+            return true;
+        }catch(e){return false;}
+    }
+    load(){
+        try{
+            const d=localStorage.getItem(CONFIG.SAVE_KEY);
+            if(d){
+                const p=JSON.parse(d);
+                player.setData(p.player);
+                if(p.scene){scene.setScene(p.scene);}
+                return true;
+            }
+        }catch(e){}
+        return false;
+    }
+    newGame(pd){
+        const M=LAYOUT.MAP;
+        player.data={
+            name:pd.name||'未命名',
+            server:pd.server||'七巧板',
+            gender:pd.gender||'male',
+            level:0,hp:100,maxHp:100,exp:0,maxExp:100,
+            gold:0,gem:0,
+            x:M.x+M.w/2,y:M.y+M.h*0.6,direction:'down'
+        };
+        scene.cur='riverbank';
+        scene._initCurData();
+        scene.initE();
+        this.save();
+        console.log('[游戏] 新游戏');
+    }
+    hasSave(){
+        try{return!!localStorage.getItem(CONFIG.SAVE_KEY);}catch(e){return false;}
+    }
+}
+const game=new Game();
+let ih=null;
+
+// ===== 全局函数 =====
+window.selectGender=function(el){
+    document.querySelectorAll('.gender-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    window.selectedGender=el.dataset.gender;
+};
+window.createCharacter=function(){
+    const name=document.getElementById('charNameInput')?.value.trim()||'神秘旅人';
+    const gender=window.selectedGender||'male';
+    const server=document.getElementById('accountInput')?.value.trim()||'七巧板';
+    document.getElementById('charCreateScreen').style.display='none';
+    document.getElementById('loginScreen').style.display='none';
+    game.newGame({name,gender,server});
+    game.setState('playing');
+};
+
+// ===== 初始化 =====
+document.addEventListener('DOMContentLoaded',async()=>{
+    console.log('[初始化] 开始');
+    applySize();
+    const cv=document.getElementById('gameCanvas');
+    const lo=document.getElementById('loadingOverlay');
+    const ls=document.getElementById('loginScreen');
+
+    if(!cv){console.error('找不到canvas');return;}
+    console.log('[初始化] Canvas找到, 准备加载资源');
+
+    lo.classList.add('active');
+    // 资源加载带超时保护（5秒强制继续）
+    const loadTimeout=new Promise(r=>setTimeout(r,5000));
+    try{await Promise.race([res.loadAll(),loadTimeout]);}catch(e){console.warn('[资源] 失败',e);}
+    console.log('[资源] 加载完成 sheet='+!!res.spritesheet+' atlas='+!!res.atlas);
+    lo.classList.remove('active');
+
+    game.init(cv);
+    ih=new IH(cv);
+    ih.setCI(document.getElementById('chatInput'));
+
+    ui.setCB(n=>{
+        if(n==='mapTag'){
+            game.toggleMapPanel();
+        }
+    });
+
+    // 检查存档
+    let hasValidSave=false;
+    try{
+        const sd=localStorage.getItem(CONFIG.SAVE_KEY);
+        if(sd){const p=JSON.parse(sd);if(p&&p.player)hasValidSave=true;}
+    }catch(e){localStorage.removeItem(CONFIG.SAVE_KEY);}
+
+    if(hasValidSave){
+        game.load();
+        ls.style.display='none';
+        document.getElementById('charCreateScreen').style.display='none';
+        game.setState('playing');
+        console.log('[初始化] 读取存档, 进入游戏');
+    }else{
+        ls.style.display='flex';
+        document.getElementById('charCreateScreen').style.display='none';
+        console.log('[初始化] 显示登录界面');
+    }
+
+    document.getElementById('loginBtn')?.addEventListener('click',()=>{
+        const acc=document.getElementById('accountInput')?.value.trim();
+        if(!acc){document.getElementById('loginError').style.display='block';return;}
+        document.getElementById('loginError').style.display='none';
+        ls.style.display='none';
+        document.getElementById('charCreateScreen').style.display='flex';
+    });
+    document.getElementById('accountInput')?.addEventListener('input',()=>{document.getElementById('loginError').style.display='none';});
+
+    console.log('[初始化] 完成');
+});
+</script>
+</body>
+</html>
